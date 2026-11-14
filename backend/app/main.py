@@ -2,7 +2,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.config import settings
+"""
+Smart Timetable Scheduler - Backend entry point.
 
+Chạy server (từ thư mục backend/):
+    uvicorn app.main:app --reload
+"""
 # ---------- Khởi tạo ứng dụng ----------
 app = FastAPI(
     title=settings.PROJECT_NAME,
