@@ -1,0 +1,28 @@
+# Môi trường ảo
+venv/
+.venv/
+env/
+
+# Biến môi trường (chứa thông tin nhạy cảm)
+.env
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+
+# Database SQLite
+*.db
+*.sqlite
+*.sqlite3
+
+# File upload tạm
+uploads/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
