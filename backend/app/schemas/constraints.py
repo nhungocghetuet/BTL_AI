@@ -17,11 +17,6 @@ class Weekday(str, Enum):
     SUNDAY = "SUNDAY"
 
 
-class DayPart(str, Enum):
-    MORNING = "morning"
-    AFTERNOON = "afternoon"
-
-
 class TimeUnit(str, Enum):
     PERIOD = "period"
     CA = "ca"
@@ -62,13 +57,12 @@ class TimeRange(StrictModel):
 
 class TimeTarget(StrictModel):
     days: list[Weekday] = Field(default_factory=list)
-    day_part: DayPart | None = None
     time_range: TimeRange | None = None
 
     @model_validator(mode="after")
     def require_target(self) -> "TimeTarget":
-        if not self.days and self.day_part is None and self.time_range is None:
-            raise ValueError("A time target must specify a day, day part, or range")
+        if not self.days and self.time_range is None:
+            raise ValueError("A time target must specify a day or time range")
         return self
 
 
@@ -77,11 +71,11 @@ class WeightedDayOff(StrictModel):
     weight: int = Field(default=3, ge=1, le=5)
 
 
-class WeightedDayPartPreference(StrictModel):
-    mode: PreferenceMode
-    day_part: DayPart
-    weight: int = Field(default=3, ge=1, le=5)
+class HardTimeRule(StrictModel):
+    """A required or forbidden global day/time target."""
 
+    mode: PreferenceMode
+    target: TimeTarget
 
 class WeightedTimeAvoidance(StrictModel):
     target: TimeTarget
@@ -89,8 +83,8 @@ class WeightedTimeAvoidance(StrictModel):
 
     @model_validator(mode="after")
     def require_time_component(self) -> "WeightedTimeAvoidance":
-        if self.target.day_part is None and self.target.time_range is None:
-            raise ValueError("A time avoidance must specify a day part or time range")
+        if self.target.time_range is None:
+            raise ValueError("A time avoidance must specify a time range")
         return self
 
 
@@ -121,10 +115,8 @@ class OptimizerConstraints(StrictModel):
     """User preferences that map directly to CP-SAT constraints or objective terms."""
 
     hard_days_off: list[Weekday] = Field(default_factory=list)
+    hard_time_rules: list[HardTimeRule] = Field(default_factory=list)
     soft_days_off: list[WeightedDayOff] = Field(default_factory=list)
-    day_part_preferences: list[WeightedDayPartPreference] = Field(
-        default_factory=list
-    )
     avoid_times: list[WeightedTimeAvoidance] = Field(default_factory=list)
     per_course: list[CourseTimeRule] = Field(default_factory=list)
     weights: ObjectiveWeights = Field(default_factory=ObjectiveWeights)
