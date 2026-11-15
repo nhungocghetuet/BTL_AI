@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.preferences import router as preferences_router
 from app.config import settings
 """
 Smart Timetable Scheduler - Backend entry point.
@@ -30,6 +31,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(preferences_router)
 
 # ---------- Route hệ thống ----------
 @app.get("/", tags=["System"], summary="Kiểm tra trạng thái server")

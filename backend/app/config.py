@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     DATABASE_URL: str = "sqlite:///./timetable.db"
+    LLM_API_KEY: str | None = None
+    LLM_BASE_URL: str = "https://api.openai.com/v1"
+    LLM_MODEL: str = "gpt-4o-mini"
+    LLM_TIMEOUT_SECONDS: float = 30.0
 
     ALLOWED_ORIGINS: list[str] = [
         "http://localhost:3000",
