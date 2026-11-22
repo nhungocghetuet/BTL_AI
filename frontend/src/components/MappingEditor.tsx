@@ -20,30 +20,28 @@ export default function MappingEditor({ headers, mapping, preview, loading, onCh
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Kiểm tra ánh xạ cột</h2>
-        <p className="text-sm text-gray-500">
+        <h2 className="text-xl font-semibold text-wedding">Kiểm tra ánh xạ cột</h2>
+        <p className="text-sm text-ink/70">
           Hệ thống đã tự đoán cột nào là gì. Hãy kiểm tra và sửa lại nếu có chỗ sai.
         </p>
       </div>
 
-      <div className="divide-y rounded-xl border bg-white">
+      <div className="card divide-y divide-celestia overflow-hidden">
         {MAPPING_FIELDS.map((f) => {
           const value = mapping[f.key] ?? ''
           const isMissing = f.required && !value
           return (
-            <div key={f.key} className="grid grid-cols-[1fr_1fr_24px] items-center gap-4 p-3">
+            <div key={f.key} className="row-hover grid grid-cols-[1fr_1fr_24px] items-center gap-4 p-3">
               <div>
                 <div className="font-medium">
                   {f.label} {f.required && <span className="text-red-500">*</span>}
                 </div>
-                {f.hint && <div className="text-xs text-gray-400">{f.hint}</div>}
+                {f.hint && <div className="text-xs text-ink/50">{f.hint}</div>}
               </div>
               <select
                 value={value}
                 onChange={(e) => onChange(f.key, e.target.value || null)}
-                className={`w-full rounded-lg border px-3 py-2 text-sm ${
-                  isMissing ? 'border-red-400 bg-red-50' : 'border-gray-300'
-                }`}
+                className={`field ${isMissing ? '!border-red-400 !bg-red-50' : ''}`}
               >
                 <option value="">-- Không chọn --</option>
                 {headers.map((h) => (
@@ -55,7 +53,7 @@ export default function MappingEditor({ headers, mapping, preview, loading, onCh
               {isMissing ? (
                 <AlertCircle className="h-5 w-5 text-red-500" />
               ) : value ? (
-                <CheckCircle2 className="h-5 w-5 text-green-500" />
+                <CheckCircle2 className="h-5 w-5 text-streak" />
               ) : (
                 <span />
               )}
@@ -65,22 +63,22 @@ export default function MappingEditor({ headers, mapping, preview, loading, onCh
       </div>
 
       {duplicates.length > 0 && (
-        <p className="text-sm text-amber-600">
+        <p className="text-sm text-amber-700">
           ⚠ Cột "{duplicates[0]}" đang được gán cho nhiều trường. Hãy kiểm tra lại.
         </p>
       )}
 
       <div>
-        <h3 className="mb-2 text-sm font-medium text-gray-700">Xem trước dữ liệu</h3>
-        <div className="overflow-x-auto rounded-xl border bg-white">
+        <h3 className="mb-2 text-sm font-medium text-wedding">Xem trước dữ liệu</h3>
+        <div className="card overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-gray-50">
+            <thead>
               <tr>
                 {headers.map((h) => (
                   <th
                     key={h}
-                    className={`whitespace-nowrap px-3 py-2 text-left font-medium ${
-                      usedColumns.has(h) ? 'bg-blue-50 text-blue-700' : 'text-gray-500'
+                    className={`whitespace-nowrap px-3 py-2 text-left font-semibold ${
+                      usedColumns.has(h) ? 'bg-alice text-wedding' : 'bg-heaven text-ink/60'
                     }`}
                   >
                     {h}
@@ -90,12 +88,12 @@ export default function MappingEditor({ headers, mapping, preview, loading, onCh
             </thead>
             <tbody>
               {preview.map((row, i) => (
-                <tr key={i} className="border-t">
+                <tr key={i} className="row-hover border-t border-celestia">
                   {row.map((cell, j) => (
                     <td
                       key={j}
                       className={`whitespace-nowrap px-3 py-2 ${
-                        usedColumns.has(headers[j]) ? 'bg-blue-50/40' : 'text-gray-400'
+                        usedColumns.has(headers[j]) ? 'bg-ice/70' : 'text-ink/40'
                       }`}
                     >
                       {cell}
@@ -108,23 +106,15 @@ export default function MappingEditor({ headers, mapping, preview, loading, onCh
         </div>
       </div>
 
-      <div className="flex items-center justify-between">
-        <button
-          onClick={onBack}
-          disabled={loading}
-          className="rounded-lg border px-4 py-2 text-sm hover:bg-gray-50 disabled:opacity-50"
-        >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <button onClick={onBack} disabled={loading} className="btn">
           ← Chọn file khác
         </button>
         <div className="flex items-center gap-3">
           {missing.length > 0 && (
             <span className="text-sm text-red-600">Còn thiếu: {missing.map((m) => m.label).join(', ')}</span>
           )}
-          <button
-            onClick={onConfirm}
-            disabled={!canConfirm}
-            className="flex items-center gap-2 rounded-lg bg-blue-600 px-5 py-2 font-medium text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-          >
+          <button onClick={onConfirm} disabled={!canConfirm} className="btn btn-primary">
             {loading && <Loader2 className="h-4 w-4 animate-spin" />}
             Xác nhận và tiếp tục
           </button>
