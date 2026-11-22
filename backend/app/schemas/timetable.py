@@ -1,20 +1,33 @@
-"""Schema chuẩn hóa thời khóa biểu, dùng chung cho parser, optimizer và API."""
+from enum import Enum
 
-from enum import Enum, IntEnum
-from typing import Any, Literal
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-from pydantic import BaseModel, Field
+
+class StrictModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class DeliveryMode(str, Enum):
+    OFFLINE = "offline"
+    ONLINE = "online"
+    UNKNOWN = "unknown"
+
+
+class ComponentType(str, Enum):
+    LECTURE = "LT"
+    PRACTICE = "TH"
+    EXERCISE = "BT"
+    OTHER = "OTHER"
+    UNKNOWN = "UNKNOWN"
 
 
 class TimeUnit(str, Enum):
-    PERIOD = "period"  # tiết
-    CA = "ca"  # ca học
-    CLOCK = "clock"  # giờ:phút
+    PERIOD = "period"
+    CA = "ca"
+    CLOCK = "clock"
 
 
-class Weekday(IntEnum):
-    """Quy ước của trường: Thứ 2 = 2 ... Thứ 7 = 7, Chủ nhật = 8."""
-
+class Weekday(int, Enum):
     MONDAY = 2
     TUESDAY = 3
     WEDNESDAY = 4
@@ -24,31 +37,53 @@ class Weekday(IntEnum):
     SUNDAY = 8
 
 
-class ComponentType(str, Enum):
-    LECTURE = "LT"
-    EXERCISE = "BT"
-    PRACTICE = "TH"
-    MIXED = "MIXED"  # ví dụ "LT+TH", "LT/BT/TH"
-    OTHER = "OTHER"
-    UNKNOWN = "UNKNOWN"
+class Meeting(StrictModel):
+    weekday: Weekday | None = None
+    start_unit: int | None = Field(default=None, ge=1)
+    end_unit: int | None = Field(default=None, ge=1)
+    time_unit: TimeUnit
+    location: str | None = None
+    delivery: DeliveryMode = DeliveryMode.UNKNOWN
+    schedule_confirmed: bool = True
+    component: ComponentType = ComponentType.UNKNOWN
+    raw_text: str | None = None
+
+    @model_validator(mode="after")
+    def validate_time(self) -> "Meeting":
+        if (
+            self.start_unit is not None
+            and self.end_unit is not None
+            and self.start_unit > self.end_unit
+        ):
+            raise ValueError("start_unit must not exceed end_unit")
+        if self.weekday is None:
+            self.schedule_confirmed = False
+        return self
 
 
-class DeliveryMode(str, Enum):
-    ONLINE = "online"
-    OFFLINE = "offline"
-    UNKNOWN = "unknown"
+class SectionOption(StrictModel):
+    section_id: str = Field(min_length=1)
+    course_id: str = Field(min_length=1)
+    course_name: str = Field(min_length=1)
+    meetings: list[Meeting] = Field(min_length=1)
+    lecturer: str | None = None
+    campus: str | None = None
+    priority_label: str | None = None
 
 
-class ImportStatus(str, Enum):
-    NEEDS_MAPPING = "needs_mapping"
-    NEEDS_CONFIRMATION = "needs_confirmation"
-    FAILED = "failed"
-    READY = "ready"
+class Course(StrictModel):
+    course_id: str = Field(min_length=1)
+    course_name: str = Field(min_length=1)
+    sections: list[SectionOption] = Field(min_length=1)
 
 
-class ColumnMapping(BaseModel):
-    """Tên cột (đúng như trong file) tương ứng với từng trường chuẩn."""
+class TimetableData(StrictModel):
+    semester: str | None = None
+    time_unit: TimeUnit
+    courses: list[Course] = Field(min_length=1)
 
+
+class ColumnMapping(StrictModel):
     course_id: str | None = None
     course_name: str | None = None
     section_id: str | None = None
@@ -60,81 +95,33 @@ class ColumnMapping(BaseModel):
     delivery: str | None = None
 
 
-class ImportIssue(BaseModel):
-    code: str
-    message: str
+class MappingSuggestion(StrictModel):
+    canonical_field: str
+    source_column: str | None = None
+    confidence: float = Field(ge=0, le=1)
+    reason: str | None = None
+    requires_confirmation: bool = False
+
+
+class ImportIssue(StrictModel):
+    code: str = Field(min_length=1)
+    message: str = Field(min_length=1)
     sheet: str | None = None
-    row: int | None = None  # số dòng 1-based như hiển thị trong Excel
+    row: int | None = None
     source_text: str | None = None
-    severity: Literal["error", "warning", "info"] = "error"
 
 
-class Meeting(BaseModel):
-    """Một buổi học lặp hàng tuần của một lớp học phần."""
-
-    weekday: Weekday | None = None
-    # Với PERIOD/CA: số tiết/ca đầu và cuối. Với CLOCK: giờ bắt đầu/kết thúc.
-    start_unit: int | None = None
-    end_unit: int | None = None
-    # Danh sách tiết/ca thực sự học (giữ nguyên khoảng trống, vd 1,2,3,7,8).
-    periods: list[int] = Field(default_factory=list)
-    # Chỉ dùng cho CLOCK: số phút tính từ 00:00.
-    start_minute: int | None = None
-    end_minute: int | None = None
-    time_unit: TimeUnit = TimeUnit.PERIOD
-    location: str | None = None
-    delivery: DeliveryMode = DeliveryMode.UNKNOWN
-    schedule_confirmed: bool = False
-    component: ComponentType = ComponentType.UNKNOWN
-    components: list[ComponentType] = Field(default_factory=list)
-    raw_text: str | None = None  # nội dung gốc của ô thời gian
-    raw_weekday: str | None = None  # nội dung gốc của ô thứ
-    source_row: int | None = None  # dòng 1-based trong file
-    parse_codes: list[str] = Field(default_factory=list)  # cảnh báo/lỗi khi phân tích
+class ImportStatus(str, Enum):
+    READY = "ready"
+    NEEDS_MAPPING = "needs_mapping"
+    NEEDS_CONFIRMATION = "needs_confirmation"
+    FAILED = "failed"
 
 
-class SectionOption(BaseModel):
-    section_id: str
-    course_id: str
-    course_name: str
-    meetings: list[Meeting]
-    lecturer: str | None = None
-    # Nếu là nhóm thực hành/bài tập con của một lớp học phần khác
-    # (vd "INT1234_01.1" thuộc "INT1234_01") thì trỏ tới lớp cha.
-    parent_section_id: str | None = None
-
-
-class SectionGroup(BaseModel):
-    """Một phương án đăng ký hoàn chỉnh cho môn học.
-
-    Khi chọn nhóm này, sinh viên học tất cả buổi của ``parent_section_id`` và
-    đúng MỘT lớp trong ``child_section_ids`` (nếu danh sách không rỗng).
-    """
-
-    group_id: str
-    course_id: str
-    parent_section_id: str
-    child_section_ids: list[str] = Field(default_factory=list)
-
-
-class Course(BaseModel):
-    course_id: str
-    course_name: str
-    sections: list[SectionOption]
-    groups: list[SectionGroup] = Field(default_factory=list)
-
-
-class TimetableData(BaseModel):
-    semester: str | None = None
-    time_unit: TimeUnit = TimeUnit.PERIOD
-    courses: list[Course]
-
-
-class TimetableImportResult(BaseModel):
+class TimetableImportResult(StrictModel):
     status: ImportStatus
     timetable: TimetableData | None = None
     suggested_mapping: ColumnMapping | None = None
     confidence: dict[str, float] = Field(default_factory=dict)
-    preview: list[dict[str, Any]] = Field(default_factory=list)
+    preview: list[dict[str, object]] = Field(default_factory=list)
     issues: list[ImportIssue] = Field(default_factory=list)
-    stats: dict[str, int] = Field(default_factory=dict)
