@@ -1,1 +1,167 @@
 @import "tailwindcss";
+
+/* ===== Bảng màu xanh (lấy từ ảnh mẫu Dulux) =====
+   Dùng được như class Tailwind: bg-ice, text-wedding, border-king, bg-mint/60 ... */
+@theme {
+  --color-ice: #e6fffb; /* Diamond Blue   - nền sáng nhất */
+  --color-mint: #c0f8f5; /* Sky High Blue  - màu "ánh lên" khi di chuột */
+  --color-lake: #aad8d5; /* Lake Blue */
+  --color-heaven: #d1ecf3; /* Blue Heaven */
+  --color-alice: #96d5de; /* Alice Blue */
+  --color-wild: #a4d7ea; /* Wild Blue Yonder */
+  --color-streak: #048fae; /* Blue Streak */
+  --color-pim: #4da4c0; /* Pim's Blue */
+  --color-note: #55aad3; /* Blue Note */
+  --color-bird: #1593c5; /* Bluebird's Song */
+  --color-king: #06659f; /* King Blue      - viền nút, nhấn mạnh */
+  --color-wedding: #204177; /* Blue Wedding   - tiêu đề, chữ đậm */
+  --color-baby: #d7e2e8; /* Baby Blue */
+  --color-roslyn: #99a7ca; /* Roslyn's Blue */
+  --color-mystic: #cae7ef; /* Mystic Water */
+  --color-celestia: #bddaec; /* Celestia */
+  --color-tranquil: #a2c6de; /* Tranquil Blue */
+  --color-lily: #aabfd0; /* Lily Blue */
+  --color-wind: #0180b3; /* Wind Tick */
+  --color-ink: #1f2a37; /* đen nhẹ cho chữ */
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  color: var(--color-ink);
+  background-color: #d1ecf3;
+  background-image: linear-gradient(160deg, #e6fffb 0%, #d1ecf3 55%, #cae7ef 100%);
+  background-attachment: fixed;
+}
+
+input[type='checkbox'] {
+  accent-color: var(--color-king);
+}
+
+/* ===== Thành phần dùng chung ===== */
+@layer components {
+  /* Nút: viền đầy đủ, chữ đen nhẹ, nền sáng lên khi di chuột */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border: 2px solid var(--color-king);
+    border-radius: 0.625rem;
+    background: var(--color-heaven);
+    color: var(--color-ink);
+    font-size: 0.875rem;
+    line-height: 1.25rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition:
+      background-color 0.15s ease,
+      box-shadow 0.15s ease,
+      border-color 0.15s ease;
+  }
+  .btn:hover:not(:disabled) {
+    background: var(--color-mint);
+    box-shadow:
+      0 0 0 3px rgb(21 147 197 / 0.18),
+      0 4px 14px rgb(6 101 159 / 0.18);
+  }
+  .btn:active:not(:disabled) {
+    background: var(--color-alice);
+  }
+  .btn:focus-visible {
+    outline: 3px solid var(--color-bird);
+    outline-offset: 2px;
+  }
+  .btn:disabled {
+    cursor: not-allowed;
+    border-color: var(--color-lily);
+    background: var(--color-baby);
+    color: #6b7b8c;
+  }
+  .btn-primary {
+    background: var(--color-alice);
+    border-color: var(--color-wedding);
+    font-weight: 600;
+  }
+  .btn-active {
+    background: var(--color-alice);
+    border-color: var(--color-wedding);
+    font-weight: 600;
+    box-shadow: inset 0 -4px 0 var(--color-wedding);
+  }
+  .btn-sm {
+    padding: 0.2rem 0.65rem;
+    border-width: 1.5px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  /* Khung / thẻ */
+  .card {
+    background: rgb(255 255 255 / 0.8);
+    border: 1.5px solid var(--color-tranquil);
+    border-radius: 0.875rem;
+    box-shadow: 0 1px 3px rgb(32 65 119 / 0.08);
+  }
+  .card-hover {
+    transition:
+      background-color 0.15s ease,
+      border-color 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+  .card-hover:hover {
+    background: var(--color-ice);
+    border-color: var(--color-bird);
+    box-shadow: 0 6px 18px rgb(6 101 159 / 0.16);
+  }
+
+  /* Dòng / ô nhỏ: sáng lên khi di chuột */
+  .row-hover {
+    transition: background-color 0.15s ease;
+  }
+  .row-hover:hover {
+    background: var(--color-mint);
+  }
+
+  /* Khối môn học trên lưới TKB: sáng lên khi di chuột */
+  .lift {
+    transition:
+      filter 0.15s ease,
+      box-shadow 0.15s ease;
+  }
+  .lift:hover {
+    filter: brightness(1.12) saturate(1.05);
+    box-shadow: 0 6px 16px rgb(6 101 159 / 0.28);
+  }
+
+  /* Ô nhập liệu */
+  /* Nền xanh đậm cho Màn hình 1 (dải chuyển quanh màu Blue Wedding) */
+  .bg-deep {
+    background: linear-gradient(135deg, #6e92d6 0%, #204177 55%, #2b5a8f 100%);
+  }
+  .field {
+    width: 100%;
+    border: 1.5px solid var(--color-lily);
+    border-radius: 0.625rem;
+    background: rgb(255 255 255 / 0.9);
+    color: var(--color-ink);
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    transition:
+      border-color 0.15s ease,
+      box-shadow 0.15s ease,
+      background-color 0.15s ease;
+  }
+  .field:hover {
+    border-color: var(--color-bird);
+    background: var(--color-ice);
+  }
+  .field:focus {
+    outline: none;
+    border-color: var(--color-king);
+    box-shadow: 0 0 0 3px rgb(21 147 197 / 0.25);
+    background: #fff;
+  }
+}

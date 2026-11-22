@@ -1,18 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import axios from 'axios'
 import FileDropzone from '../components/FileDropzone'
 import MappingEditor from '../components/MappingEditor'
 import { uploadFile, confirmMapping } from '../api/client'
+import { getErrorMessage } from '../lib/errors'
 import { useApp } from '../store/useAppStore'
 import type { UploadResponse } from '../types'
 
 type Step = 'drop' | 'map'
-
-function errMsg(e: unknown, fallback: string): string {
-  if (axios.isAxiosError(e)) return e.response?.data?.detail ?? fallback
-  return fallback
-}
 
 export default function UploadPage() {
   const navigate = useNavigate()
@@ -33,7 +28,7 @@ export default function UploadPage() {
       setMapping(res.mapping)
       setStep('map')
     } catch (e) {
-      setError(errMsg(e, 'Không đọc được file. Vui lòng kiểm tra lại định dạng.'))
+      setError(getErrorMessage(e, 'Không đọc được file. Vui lòng kiểm tra lại định dạng.'))
     } finally {
       setLoading(false)
     }
@@ -49,7 +44,7 @@ export default function UploadPage() {
       setCourses(courses)
       navigate('/plan')
     } catch (e) {
-      setError(errMsg(e, 'Xác nhận thất bại. Vui lòng thử lại.'))
+      setError(getErrorMessage(e, 'Xác nhận thất bại. Vui lòng thử lại.'))
     } finally {
       setLoading(false)
     }
@@ -62,32 +57,35 @@ export default function UploadPage() {
     setError(null)
   }
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="mx-auto max-w-4xl px-4 py-10">
-        <header className="mb-8 text-center">
-          <h1 className="text-3xl font-bold">Xếp thời khóa biểu thông minh</h1>
-          <p className="mt-2 text-gray-500">
-            Tải lên file lịch học của trường, mô tả mong muốn bằng tiếng Việt, hệ thống sẽ lo phần còn lại.
-          </p>
-        </header>
+  const width = step === 'map' ? 'max-w-4xl' : 'max-w-[640px]'
 
+  return (
+    <div className="bg-deep relative min-h-screen">
+      <span className="absolute left-5 top-5 rounded-full bg-white px-4 py-2 text-sm font-bold text-wedding shadow-lg">
+        TKB-AI
+      </span>
+
+      <div className="flex min-h-screen flex-col items-center justify-center px-4 py-20">
         {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">{error}</div>
+          <div className={`mb-4 w-full ${width} rounded-lg border border-red-300 bg-red-50 p-3 text-sm text-red-700`}>
+            {error}
+          </div>
         )}
 
         {step === 'drop' && <FileDropzone onFile={handleFile} loading={loading} />}
 
         {step === 'map' && uploaded && (
-          <MappingEditor
-            headers={uploaded.headers}
-            mapping={mapping}
-            preview={uploaded.preview}
-            loading={loading}
-            onChange={(field, col) => setMapping((m) => ({ ...m, [field]: col }))}
-            onConfirm={handleConfirm}
-            onBack={handleBack}
-          />
+          <div className="w-full max-w-4xl rounded-3xl bg-white p-6 shadow-2xl sm:p-8">
+            <MappingEditor
+              headers={uploaded.headers}
+              mapping={mapping}
+              preview={uploaded.preview}
+              loading={loading}
+              onChange={(field, col) => setMapping((m) => ({ ...m, [field]: col }))}
+              onConfirm={handleConfirm}
+              onBack={handleBack}
+            />
+          </div>
         )}
       </div>
     </div>
