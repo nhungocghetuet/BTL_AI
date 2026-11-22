@@ -137,6 +137,10 @@ input[type='checkbox'] {
   }
 
   /* Ô nhập liệu */
+  /* Nền xanh đậm cho Màn hình 1 (dải chuyển quanh màu Blue Wedding) */
+  .bg-deep {
+    background: linear-gradient(135deg, #6e92d6 0%, #204177 55%, #2b5a8f 100%);
+  }
   .field {
     width: 100%;
     border: 1.5px solid var(--color-lily);
