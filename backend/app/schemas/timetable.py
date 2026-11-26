@@ -1,4 +1,5 @@
 from enum import Enum
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -17,6 +18,7 @@ class ComponentType(str, Enum):
     LECTURE = "LT"
     PRACTICE = "TH"
     EXERCISE = "BT"
+    MIXED = "MIXED"  # ô ghi nhiều thành phần, ví dụ "LT+TH"
     OTHER = "OTHER"
     UNKNOWN = "UNKNOWN"
 
@@ -39,14 +41,23 @@ class Weekday(int, Enum):
 
 class Meeting(StrictModel):
     weekday: Weekday | None = None
-    start_unit: int | None = Field(default=None, ge=1)
-    end_unit: int | None = Field(default=None, ge=1)
+    # ge=0: giờ bắt đầu có thể là 0 (00:30) và ô lỗi như "tiết 0" vẫn phải
+    # dựng được Meeting để validate.py báo TIME_OUT_OF_RANGE thay vì crash.
+    start_unit: int | None = Field(default=None, ge=0)
+    end_unit: int | None = Field(default=None, ge=0)
+    periods: list[int] = Field(default_factory=list)
+    start_minute: int | None = Field(default=None, ge=0)
+    end_minute: int | None = Field(default=None, ge=0)
     time_unit: TimeUnit
     location: str | None = None
     delivery: DeliveryMode = DeliveryMode.UNKNOWN
     schedule_confirmed: bool = True
     component: ComponentType = ComponentType.UNKNOWN
+    components: list[ComponentType] = Field(default_factory=list)
     raw_text: str | None = None
+    raw_weekday: str | None = None
+    source_row: int | None = None  # số dòng Excel (1-based)
+    parse_codes: list[str] = Field(default_factory=list)
 
     @model_validator(mode="after")
     def validate_time(self) -> "Meeting":
@@ -69,12 +80,21 @@ class SectionOption(StrictModel):
     lecturer: str | None = None
     campus: str | None = None
     priority_label: str | None = None
+    parent_section_id: str | None = None  # lớp cha nếu đây là nhóm con TH/BT
+
+
+class SectionGroup(StrictModel):
+    group_id: str = Field(min_length=1)
+    course_id: str = Field(min_length=1)
+    parent_section_id: str = Field(min_length=1)
+    child_section_ids: list[str] = Field(default_factory=list)
 
 
 class Course(StrictModel):
     course_id: str = Field(min_length=1)
     course_name: str = Field(min_length=1)
     sections: list[SectionOption] = Field(min_length=1)
+    groups: list[SectionGroup] = Field(default_factory=list)
 
 
 class TimetableData(StrictModel):
@@ -109,6 +129,9 @@ class ImportIssue(StrictModel):
     sheet: str | None = None
     row: int | None = None
     source_text: str | None = None
+    # Mặc định "error": validate_mapping tạo MISSING_MAPPING / UNKNOWN_COLUMN
+    # không truyền severity và adapter dựa vào đó để trả FAILED.
+    severity: Literal["error", "warning", "info"] = "error"
 
 
 class ImportStatus(str, Enum):
@@ -125,3 +148,4 @@ class TimetableImportResult(StrictModel):
     confidence: dict[str, float] = Field(default_factory=dict)
     preview: list[dict[str, object]] = Field(default_factory=list)
     issues: list[ImportIssue] = Field(default_factory=list)
+    stats: dict[str, int] = Field(default_factory=dict)
