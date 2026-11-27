@@ -18,3 +18,8 @@ python-multipart==0.0.19
 # ===== Tối ưu hóa & gọi LLM =====
 ortools==9.11.4210
 httpx==0.28.1
+
+# ===== Tiện ích bổ trợ & Kiểm thử =====
+xlrd==2.0.1          # Đọc định dạng .xls cũ
+rapidfuzz==3.10.1    # So khớp mờ (fuzzy matching) tốc độ cao (có fallback difflib nếu thiếu)
+pytest==8.3.4        # Chạy bộ kiểm thử tự động

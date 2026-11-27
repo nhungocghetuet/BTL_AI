@@ -3,7 +3,7 @@ venv/
 .venv/
 env/
 
-# Biến môi trường (chứa thông tin nhạy cảm)
+# Biến môi trường thực tế
 .env
 
 # Python cache
