@@ -4,11 +4,23 @@ Smart Timetable Scheduler - Backend entry point.
 Chạy server (từ thư mục backend/):
     uvicorn app.main:app --reload
 """
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.preferences import router as preferences_router
+from app.api.upload import router as upload_router
 from app.config import settings
+from app.db.session import init_db
+
+
+@asynccontextmanager
+async def lifespan(_app: FastAPI):
+    settings.UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    init_db()
+    yield
+
 
 # ---------- Khởi tạo ứng dụng ----------
 app = FastAPI(
@@ -22,6 +34,7 @@ app = FastAPI(
     docs_url="/docs",    # Swagger UI
     redoc_url="/redoc",  # ReDoc
     debug=settings.DEBUG,
+    lifespan=lifespan,
 )
 
 # ---------- CORS cho Frontend React/Next.js ----------
@@ -34,6 +47,7 @@ app.add_middleware(
 )
 
 app.include_router(preferences_router)
+app.include_router(upload_router)
 
 # ---------- Route hệ thống ----------
 @app.get("/", tags=["System"], summary="Kiểm tra trạng thái server")

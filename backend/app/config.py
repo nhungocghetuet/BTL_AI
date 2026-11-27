@@ -18,6 +18,10 @@ class Settings(BaseSettings):
     LLM_MODEL: str = "gpt-4o-mini"
     LLM_TIMEOUT_SECONDS: float = 30.0
 
+    # Upload file TKB 
+    UPLOAD_DIR: Path = BASE_DIR / "uploads"
+    MAX_UPLOAD_MB: int = 10
+
     ALLOWED_ORIGINS: list[str] = [
         "http://localhost:3000",
         "http://127.0.0.1:3000",
@@ -28,7 +32,7 @@ class Settings(BaseSettings):
         env_file=BASE_DIR / ".env",
         env_file_encoding="utf-8",
         case_sensitive=True,
-        extra="ignore",  
+        extra="ignore",
     )
 
 settings = Settings()
